@@ -1,0 +1,54 @@
+---
+- name: Desafiador
+  hosts: all
+  tasks:
+    - name: Parar NGINX
+      systemd:
+        name: nginx
+        state: stopped
+      ignore_erros: True
+
+    - name: Desistalando NGINX
+      package:
+        name: nginx
+        state: absent
+
+    - name: Instalando Pacotes Ubundo
+      apt:
+        name: ['apache2','libapache2-mod-php7.2','php7.2']
+        update_cache: yes
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Instalando Pacotes Nginx
+      yum:
+        name: ['httd','php']
+        state: present
+        notify: httpd
+
+    - name: Habilitando Modulo do Apache
+      apache2_module:
+        name: php7.2
+        state: present
+        notify: apache
+        when: ansible_distribution == "Ubuntu"
+
+    - name: Criando Arquivos Index.php
+      lineinfile:
+        path: /var/www/html/index.php
+        line: '<?php echo "Desafio Completo" ?>'
+        create: yes
+
+  - handles:
+    - name: httpd
+      systemd:
+        name: httpd
+        state: restarted
+
+    - name: apache
+      systemnd:
+      name: apache2
+      nofify: apache
+
+
+
